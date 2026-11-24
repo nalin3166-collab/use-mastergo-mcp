@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "rootDir": "src",
+    "outDir": "dist",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./node_modules/@mastergo",
+      "../../node_modules/@types",
+      "../../node_modules/@mastergo"
+    ]
+  },
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "use-mastergo-mcp-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "High-throughput MasterGo MCP server and desktop plugin bridge using the use_mastergo paradigm",
+  "license": "MIT",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @use-mastergo-mcp/protocol build && pnpm --filter use-mastergo-mcp build && pnpm --filter @use-mastergo-mcp/mg-plugin build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "dev:plugin": "pnpm --filter @use-mastergo-mcp/mg-plugin dev",
+    "start:mcp": "pnpm --filter use-mastergo-mcp start",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.1.1"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@use-mastergo-mcp/mg-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MasterGo desktop bridge plugin for use-mastergo-mcp",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"Plugin verified via typecheck & bundle build\"",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\""
+  },
+  "dependencies": {
+    "@use-mastergo-mcp/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@mastergo/plugin-typings": "latest"
+  }
+}

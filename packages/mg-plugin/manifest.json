@@ -1,0 +1,8 @@
+{
+  "name": "use-mastergo-mcp Bridge",
+  "id": "",
+  "api": "1.0.0",
+  "main": "./main.js",
+  "ui": "./ui.html",
+  "permissions": ["currentuser"]
+}

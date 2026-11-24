@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>use-mastergo-mcp Bridge</title>
+    <style>
+      :root {
+        --bg: #111318;
+        --panel: #191d26;
+        --border: #2a3140;
+        --text: #eef2f7;
+        --muted: #8b95a7;
+        --accent: #4f8cff;
+        --ok: #22c55e;
+        --warn: #f59e0b;
+        --err: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 12px;
+        color: var(--text);
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .title {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+
+      .dot.connected {
+        background: var(--ok);
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.65);
+      }
+
+      .dot.connecting {
+        background: var(--warn);
+      }
+
+      .dot.error {
+        background: var(--err);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      label {
+        color: var(--muted);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      input[type="number"] {
+        width: 82px;
+        padding: 5px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 12px;
+        outline: none;
+      }
+
+      input[type="number"]:focus {
+        border-color: var(--accent);
+      }
+
+      button {
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--accent);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: var(--text);
+      }
+
+      button:hover {
+        opacity: 0.92;
+      }
+
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .log-container {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .log-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .log-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .log-item {
+        padding: 5px 7px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.03);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .log-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+        font-size: 11px;
+      }
+
+      .log-method {
+        font-weight: 600;
+      }
+
+      .log-ok {
+        color: var(--ok);
+      }
+
+      .log-err {
+        color: var(--err);
+      }
+
+      .log-run {
+        color: var(--warn);
+      }
+
+      .log-label {
+        color: var(--muted);
+        font-size: 11px;
+        word-break: break-word;
+      }
+
+      .empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 28px 8px;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="title">use-mastergo-mcp</div>
+      <div class="badge">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Disconnected</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <label for="portInput">ws://127.0.0.1:</label>
+        <input id="portInput" type="number" min="1" max="65535" value="8787" />
+        <button id="connectBtn" type="button">Reconnect</button>
+      </div>
+      <div class="meta">
+        <span>Sandbox eval: <strong id="evalCap" class="mono">checking...</strong></span>
+        <span id="docName" class="mono"></span>
+      </div>
+    </div>
+
+    <div class="log-container">
+      <div class="log-header">
+        <span>Activity Log</span>
+        <button id="clearBtn" class="secondary" type="button">Clear</button>
+      </div>
+      <div id="logList" class="log-list">
+        <div class="empty">Waiting for MCP requests...</div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const STORAGE_KEY = "use-mastergo-mcp-port";
+        const MAX_LOGS = 25;
+
+        const statusDot = document.getElementById("statusDot");
+        const statusText = document.getElementById("statusText");
+        const portInput = document.getElementById("portInput");
+        const connectBtn = document.getElementById("connectBtn");
+        const clearBtn = document.getElementById("clearBtn");
+        const evalCap = document.getElementById("evalCap");
+        const docName = document.getElementById("docName");
+        const logList = document.getElementById("logList");
+
+        let ws = null;
+        let reconnectTimer = null;
+        let retryDelayMs = 1000;
+        let cachedHello = null;
+        let logs = [];
+
+        try {
+          const savedPort = localStorage.getItem(STORAGE_KEY);
+          if (savedPort && /^\d+$/.test(savedPort)) {
+            portInput.value = savedPort;
+          }
+        } catch (_) {}
+
+        function setStatus(state, text) {
+          statusDot.className = "dot " + state;
+          statusText.textContent = text;
+        }
+
+        function postToMain(message) {
+          parent.postMessage({ pluginMessage: message }, "*");
+        }
+
+        function renderLogs() {
+          if (logs.length === 0) {
+            logList.innerHTML = '<div class="empty">Waiting for MCP requests...</div>';
+            return;
+          }
+          logList.innerHTML = "";
+          for (const item of logs) {
+            const el = document.createElement("div");
+            el.className = "log-item";
+
+            const top = document.createElement("div");
+            top.className = "log-top";
+
+            const method = document.createElement("span");
+            method.className =
+              "log-method mono " +
+              (item.status === "ok"
+                ? "log-ok"
+                : item.status === "error"
+                ? "log-err"
+                : "log-run");
+            method.textContent = item.method;
+
+            const time = document.createElement("span");
+            time.className = "mono";
+            time.style.color = "#8b95a7";
+            time.textContent =
+              typeof item.durationMs === "number"
+                ? item.durationMs + "ms"
+                : item.time;
+
+            top.appendChild(method);
+            top.appendChild(time);
+
+            const label = document.createElement("div");
+            label.className = "log-label";
+            label.textContent = item.label;
+
+            el.appendChild(top);
+            el.appendChild(label);
+            logList.appendChild(el);
+          }
+        }
+
+        function addLog(entry) {
+          const now = new Date();
+          const hh = String(now.getHours()).padStart(2, "0");
+          const mm = String(now.getMinutes()).padStart(2, "0");
+          const ss = String(now.getSeconds()).padStart(2, "0");
+          logs.unshift({
+            ...entry,
+            time: hh + ":" + mm + ":" + ss,
+          });
+          if (logs.length > MAX_LOGS) {
+            logs = logs.slice(0, MAX_LOGS);
+          }
+          renderLogs();
+        }
+
+        function getPort() {
+          const parsed = Number(portInput.value);
+          if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 65535) {
+            return parsed;
+          }
+          return 8787;
+        }
+
+        function scheduleReconnect() {
+          if (reconnectTimer) return;
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            connect();
+          }, retryDelayMs);
+          retryDelayMs = Math.min(retryDelayMs * 1.5, 5000);
+        }
+
+        function connect() {
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+          }
+          if (ws) {
+            try {
+              ws.onclose = null;
+              ws.onerror = null;
+              ws.onmessage = null;
+              ws.close();
+            } catch (_) {}
+            ws = null;
+          }
+
+          const port = getPort();
+          try {
+            localStorage.setItem(STORAGE_KEY, String(port));
+          } catch (_) {}
+
+          const url = "ws://127.0.0.1:" + port;
+          setStatus("connecting", "Connecting :" + port);
+
+          try {
+            ws = new WebSocket(url);
+          } catch (err) {
+            setStatus("error", "Connect error");
+            addLog({
+              status: "error",
+              method: "bridge",
+              label: String(err),
+            });
+            scheduleReconnect();
+            return;
+          }
+
+          ws.onopen = function () {
+            retryDelayMs = 1000;
+            setStatus("connected", "Connected :" + port);
+            if (cachedHello) {
+              ws.send(JSON.stringify(cachedHello));
+            } else {
+              postToMain({ type: "request-hello" });
+            }
+          };
+
+          ws.onmessage = function (event) {
+            let msg;
+            try {
+              msg = JSON.parse(event.data);
+            } catch (_) {
+              return;
+            }
+            if (!msg || typeof msg !== "object") return;
+
+            if (msg.type === "ping") {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "pong", ts: msg.ts }));
+              }
+              return;
+            }
+
+            if (msg.type === "request") {
+              postToMain({
+                type: "bridge-request",
+                request: msg,
+              });
+            }
+          };
+
+          ws.onerror = function () {
+            setStatus("error", "Waiting :" + port);
+          };
+
+          ws.onclose = function () {
+            setStatus("", "Disconnected");
+            scheduleReconnect();
+          };
+        }
+
+        window.onmessage = function (event) {
+          const data = event.data && event.data.pluginMessage
+            ? event.data.pluginMessage
+            : event.data;
+          if (!data || !data.__mgBridge) return;
+
+          if (data.type === "hello-payload" && data.hello) {
+            cachedHello = data.hello;
+            evalCap.textContent = data.hello.capabilities.dynamicEval
+              ? "OK"
+              : "RESTRICTED";
+            evalCap.style.color = data.hello.capabilities.dynamicEval
+              ? "#22c55e"
+              : "#f59e0b";
+            if (data.hello.document && data.hello.document.name) {
+              docName.textContent = data.hello.document.name.slice(0, 18);
+            }
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify(cachedHello));
+            }
+            return;
+          }
+
+          if (data.type === "ws-send" && data.message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify(data.message));
+            }
+            if (data.activity) {
+              addLog(data.activity);
+            }
+          }
+        };
+
+        connectBtn.addEventListener("click", function () {
+          retryDelayMs = 1000;
+          connect();
+        });
+
+        clearBtn.addEventListener("click", function () {
+          logs = [];
+          renderLogs();
+        });
+
+        postToMain({ type: "ui-ready" });
+        connect();
+      })();
+    </script>
+  </body>
+</html>
