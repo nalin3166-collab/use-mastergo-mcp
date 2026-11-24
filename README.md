@@ -59,10 +59,9 @@ pnpm build
 
 ### 2. Load the Bridge Plugin in MasterGo Desktop
 
-1. Open any design file in the **MasterGo Desktop** client.
-2. Go to **Plugins (插件) → Developer Mode (开发者模式) → Import Local Plugin (导入本地插件)**.
-3. Select the built directory: `packages/mg-plugin/dist` (containing `manifest.json`, `main.js`, and `ui.html`).
-4. Run **use-mastergo-mcp Bridge** from the Plugins menu. The panel will automatically connect to `ws://127.0.0.1:8787` and display **Connected** once your AI client starts the MCP server.
+1. Open any design file in the **MasterGo Desktop** client *(note: the web app does not support local development plugins)*.
+2. Right-click on the canvas → **Plugins (插件) → Dev Plugins (开发插件) → Create / Add Plugin (创建 / 添加插件)** and select `packages/mg-plugin/dist/manifest.json`.
+3. Launch **use-mastergo-mcp Bridge** and confirm the panel shows green **Connected :8787** and **Sandbox eval: OK**.
 
 ### 3. Configure Your AI Client
 

@@ -18,7 +18,7 @@ import {
   type UploadImagesResult,
 } from "@use-mastergo-mcp/protocol";
 
-const PLUGIN_VERSION = "0.1.0";
+const PLUGIN_VERSION = "0.1.1";
 
 const BASE64_CHARS =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -119,36 +119,49 @@ function summarizeSceneNode(node: SceneNode): SelectionNodeSummary {
 function getDocumentSnapshot(): DocumentSnapshot {
   const doc = mg.document;
   const currentPage = doc.currentPage;
+  const pages = Array.isArray(doc.children) ? doc.children : [];
+  const selection = Array.isArray(currentPage?.selection)
+    ? currentPage.selection
+    : [];
   return {
-    id: doc.id,
-    name: doc.name,
-    currentPageId: currentPage.id,
-    currentPageName: currentPage.name,
-    pages: doc.children.map((page) => ({
+    id: String(doc?.id ?? ""),
+    name: String(doc?.name ?? "Untitled"),
+    currentPageId: String(currentPage?.id ?? ""),
+    currentPageName: String(currentPage?.name ?? ""),
+    pages: pages.map((page) => ({
       id: page.id,
       name: page.name,
-      childCount: page.children.length,
-      isCurrent: page.id === currentPage.id,
+      childCount: Array.isArray(page.children) ? page.children.length : 0,
+      isCurrent: page.id === currentPage?.id,
     })),
-    selection: currentPage.selection.map(summarizeSceneNode),
+    selection: selection.map(summarizeSceneNode),
   };
 }
 
 function buildHelloMessage(): BridgeHelloMessage {
+  let document: DocumentSnapshot | undefined;
+  try {
+    document = getDocumentSnapshot();
+  } catch (err) {
+    console.error("[use-mastergo-mcp] getDocumentSnapshot error:", err);
+  }
   return {
     type: "hello",
     protocolVersion: PROTOCOL_VERSION,
     pluginVersion: PLUGIN_VERSION,
     capabilities: CAPABILITIES,
-    document: getDocumentSnapshot(),
+    document,
   };
 }
 
 function postToUI(payload: Record<string, unknown>): void {
-  mg.ui.postMessage({
-    __mgBridge: true,
-    ...payload,
-  });
+  mg.ui.postMessage(
+    {
+      __mgBridge: true,
+      ...payload,
+    },
+    "*"
+  );
 }
 
 async function handleStatus(): Promise<StatusResult> {
@@ -378,17 +391,17 @@ async function dispatchBridgeRequest(request: BridgeRequestMessage): Promise<voi
   }
 }
 
-mg.showUI(__html__, {
-  width: 320,
-  height: 430,
-  visible: true,
-});
+console.log("[use-mastergo-mcp] main thread booted, capabilities:", CAPABILITIES);
 
 mg.ui.onmessage = (rawMessage: unknown) => {
   if (!rawMessage || typeof rawMessage !== "object") {
     return;
   }
-  const msg = rawMessage as Record<string, unknown>;
+  const rawRecord = rawMessage as Record<string, unknown>;
+  const msg =
+    rawRecord.pluginMessage && typeof rawRecord.pluginMessage === "object"
+      ? (rawRecord.pluginMessage as Record<string, unknown>)
+      : rawRecord;
 
   if (msg.type === "ui-ready" || msg.type === "request-hello") {
     postToUI({
@@ -402,3 +415,21 @@ mg.ui.onmessage = (rawMessage: unknown) => {
     void dispatchBridgeRequest(msg.request as BridgeRequestMessage);
   }
 };
+
+mg.showUI(__html__, {
+  width: 320,
+  height: 430,
+  visible: true,
+});
+
+// Proactively push hello in case ui-ready fired before listener attachment
+setTimeout(() => {
+  try {
+    postToUI({
+      type: "hello-payload",
+      hello: buildHelloMessage(),
+    });
+  } catch (err) {
+    console.error("[use-mastergo-mcp] initial postToUI failed:", err);
+  }
+}, 250);

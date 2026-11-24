@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-11-24
+
+### Fixed
+- **MasterGo `postMessage` handshake**: Send direct payloads via `parent.postMessage(msg, '*')` (without Figma's `{ pluginMessage }` wrapper), attach `mg.ui.onmessage` before `mg.showUI()`, and listen with `window.addEventListener('message', ...)`.
+- **MasterGo `manifest.json` ID**: Added a valid numeric plugin `id` and updated the plugin build script to preserve existing `dist/manifest.json` IDs across rebuilds.
+- **GitHub Actions CI**: Aligned CI matrix to Node 22 & Node 24 LTS for `pnpm@11.25.0` compatibility.
+
+### Docs
+- Updated README quickstart steps to match MasterGo Desktop's exact plugin menu (`开发插件 → 创建 / 添加插件`) and added live-verified font/screenshot tips to `skills/mastergo-use/SKILL.md`.
+
 ## [0.1.0] - 2026-11-24
 
 ### Added

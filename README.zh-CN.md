@@ -59,10 +59,9 @@ pnpm build
 
 ### 2. 在 MasterGo 桌面客户端加载本地插件
 
-1. 打开 **MasterGo 桌面端**，进入任意设计文件。
-2. 顶部菜单依次点击 **「插件」 → 「开发者模式」 → 「导入本地插件」**（或「添加本地插件」）。
-3. 选择本项目的构建产物目录：`packages/mg-plugin/dist`（内含 `manifest.json`、`main.js`、`ui.html`）。
-4. 运行插件 **use-mastergo-mcp Bridge**。AI 客户端启动 MCP Server 后，面板状态会自动变为绿色 **Connected**。
+1. 打开 **MasterGo 桌面客户端**（注意：网页版不支持本地开发插件），进入任意设计文件画布。
+2. 在画布空白处 **右键 →「插件」→「开发插件」→「创建 / 添加插件」**，选择本项目的构建清单文件：`packages/mg-plugin/dist/manifest.json`。
+3. 在 **「管理插件」→「开发与发布」** 或右键菜单运行 **use-mastergo-mcp Bridge**。确认面板显示绿色 **Connected :8787** 与 **Sandbox eval: OK** 即可开始使用。
 
 ### 3. 配置 AI 客户端
 

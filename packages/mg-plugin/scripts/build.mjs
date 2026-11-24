@@ -1,5 +1,5 @@
 import { build, context } from "esbuild";
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,7 +10,20 @@ const isWatch = process.argv.includes("--watch");
 
 function copyStaticAssets() {
   mkdirSync(distDir, { recursive: true });
-  copyFileSync(resolve(pkgRoot, "manifest.json"), resolve(distDir, "manifest.json"));
+  const srcManifestPath = resolve(pkgRoot, "manifest.json");
+  const distManifestPath = resolve(distDir, "manifest.json");
+  const srcManifest = JSON.parse(readFileSync(srcManifestPath, "utf8"));
+  if (!srcManifest.id && existsSync(distManifestPath)) {
+    try {
+      const existing = JSON.parse(readFileSync(distManifestPath, "utf8"));
+      if (existing && existing.id) {
+        srcManifest.id = existing.id;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+  writeFileSync(distManifestPath, JSON.stringify(srcManifest, null, 2) + "\n", "utf8");
   copyFileSync(resolve(pkgRoot, "src/ui.html"), resolve(distDir, "ui.html"));
 }
 

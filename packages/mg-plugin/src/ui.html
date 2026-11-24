@@ -225,7 +225,7 @@
   </head>
   <body>
     <div class="header">
-      <div class="title">use-mastergo-mcp</div>
+      <div class="title">use-mastergo-mcp <span style="color:#8b95a7;font-weight:400;font-size:11px">v0.1.1</span></div>
       <div class="badge">
         <span id="statusDot" class="dot"></span>
         <span id="statusText">Disconnected</span>
@@ -287,7 +287,7 @@
         }
 
         function postToMain(message) {
-          parent.postMessage({ pluginMessage: message }, "*");
+          parent.postMessage(message, "*");
         }
 
         function renderLogs() {
@@ -429,6 +429,11 @@
             }
 
             if (msg.type === "request") {
+              addLog({
+                status: "run",
+                method: msg.method,
+                label: "Received from MCP -> forwarding to main...",
+              });
               postToMain({
                 type: "bridge-request",
                 request: msg,
@@ -446,7 +451,7 @@
           };
         }
 
-        window.onmessage = function (event) {
+        window.addEventListener("message", function (event) {
           const data = event.data && event.data.pluginMessage
             ? event.data.pluginMessage
             : event.data;
@@ -477,7 +482,7 @@
               addLog(data.activity);
             }
           }
-        };
+        });
 
         connectBtn.addEventListener("click", function () {
           retryDelayMs = 1000;
